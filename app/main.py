@@ -1,13 +1,12 @@
 
 from fastapi import FastAPI,Response,Request,status,HTTPException,Depends
 from fastapi.params import Body
-from pydantic import BaseModel
-from typing import Optional,List
+from typing import List
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
 from sqlalchemy.orm import Session
-from . import model
+from . import model,schemas
 from .database import get_db,engine
 
 # 
@@ -16,20 +15,12 @@ model.Base.metadata.create_all(bind=engine)
 #  create a FastAPI "instance"
 app:FastAPI = FastAPI()
 
-# Define a  model for the create post payload
-class PostPayload(BaseModel):
-    vchr_title:str
-    vchr_content:str
-    # optional field with default value
-    bln_published: bool = True
-    # 
-    # rating:Optional[int] = None
-    int_post_id:Optional[int] = None
+
 
 
 while True:
     try:
-        #    - *dbname*: the database name
+        # - *dbname*: the database name
         # - *database*: the database name (only as keyword argument)
         # - *user*: user name used to authenticate
         # - *password*: password used to authenticate
@@ -43,11 +34,6 @@ while True:
         print("Database connection failed")
         print(err)
         time.sleep(2)    
-# dummy model List
-my_posts: List[PostPayload] = [
-            {"title": "title 1", "content": "test 1", "published": True, "rating": 2.5,"int_post_id":1},
-            {"title": "title 2 ", "content": "test 2", "published": True, "rating": 2.5,"int_post_id":2}
-            ]
 
 
 # request Get method url: "/"
@@ -56,7 +42,7 @@ def root():
     return {"body":"Hello 1"}
 
 # request Get method url: "/posts"
-@app.get("/get_posts")
+@app.get("/get_posts",status_code=status.HTTP_200_OK, response_model= list[schemas.CreatePostResponse])
 def get_posts(db: Session = Depends(get_db)):
     # using postgres
     # cursor.execute("SELECT * FROM tbl_post")
@@ -67,12 +53,12 @@ def get_posts(db: Session = Depends(get_db)):
     '''
     my_posts = db.query(model.Post).all()
     
-    return { "data" : my_posts }
+    return  my_posts
 
 
-# request POST method url : "/create_posts"
-@app.post("/create_post",status_code=status.HTTP_201_CREATED)
-def create_post(payload:PostPayload, db:Session = Depends(get_db)):
+# request POST method url : "/create_post"
+@app.post("/create_post",status_code=status.HTTP_201_CREATED,response_model= schemas.CreatePostResponse)
+def create_post(payload:schemas.CreatePostPayload, db:Session = Depends(get_db)):
     
     '''
     USING POSTGRESSQL library
@@ -104,18 +90,18 @@ def create_post(payload:PostPayload, db:Session = Depends(get_db)):
     # payload.int_post_id = (max(my_posts,key= lambda x: x['int_post_id'])["int_post_id"] or 0) + 1 
     # to convert pydantic model to dictionary use dict method or model_dump
     # my_posts.append(payload.model_dump())
-    return { "created_post" : new_post }
+    return new_post 
 
 # request get method url : "get_post/latest" to get the latest post 
 @app.get("/get_post/latest")
 def get_latest_post():
-    return {"latest_post":my_posts[ len(my_posts) - 1]}
+    return {"latest_post":{}}
 
 # request get method url : "/get_post/{id}"
 '''
 get_post function with id as param with integer
 '''
-@app.get("/get_post/{id}")
+@app.get("/get_post/{id}",status_code= status.HTTP_200_OK, response_model= schemas.GetPostRes)
 def get_post(id: int,res:Response,db: Session = Depends(get_db)):
     # get data 
     # dict_post = [post for post in my_posts if post["int_post_id"] == id]
@@ -138,11 +124,11 @@ def get_post(id: int,res:Response,db: Session = Depends(get_db)):
         # res.status_code = status.HTTP_404_NOT_FOUND
         # return {"str_message":f"Post with id {id} not found"}
         
-    return { "post_details" : f"Here is the post id {id}", "body" : dict_post }
+    return { "str_message" : f"Here is the post id {id}", "body" : dict_post }
 
 
 # request DELETE method url: "/delete_post/{id}"
-@app.delete("/delete_post/{id}",status_code=status.HTTP_202_ACCEPTED)
+@app.delete("/delete_post/{id}",status_code=status.HTTP_202_ACCEPTED, response_model= schemas.GetPostRes)
 def delete_post(id:int, db:Session = Depends(get_db)):
     deleted_post = None
     
@@ -155,7 +141,7 @@ def delete_post(id:int, db:Session = Depends(get_db)):
     #             """
     # cursor.execute(str_query,(str(id)))
     # deleted_post = cursor.fetchone()
-    # conn.commit()
+    # conn.commit() 
     '''USING CODE'''
     # for i,post in enumerate(my_posts):
     #     print(post)
@@ -171,13 +157,13 @@ def delete_post(id:int, db:Session = Depends(get_db)):
     post_query.delete(synchronize_session=False)
     db.commit()
     
-    return { "str_message":" successfully deleted ","delete_post":post_query.first()}
+    return { "str_message":" successfully deleted ","body":deleted_post}
 
     # print(my_posts.index({"int_post_id":id}))
 
 #request PUT method url :"/update_post/{id}"
-@app.put("/update_post/{id}",status_code=status.HTTP_202_ACCEPTED)
-def update_post(id:int, payload:PostPayload, res:Response, db:Session = Depends(get_db)):
+@app.put("/update_post/{id}",status_code=status.HTTP_202_ACCEPTED, response_model= schemas.GetPostRes)
+def update_post(id:int, payload:schemas.UpdatePostPayload, res:Response, db:Session = Depends(get_db)):
     # flag to know that value has been updated
     updated_post = None
     ''''
@@ -204,15 +190,11 @@ def update_post(id:int, payload:PostPayload, res:Response, db:Session = Depends(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"Post with id {id} not found")
     # update_query.update({'vchr_title':payload.vchr_title,'vchr_content':payload.vchr_content},synchronize_session=False)
     # or
+    print(payload.model_dump())
     update_query.update(payload.model_dump(),synchronize_session=False)
     
     db.commit()
-    return {"body":update_query.first()}
+    return {"body":update_query.first(), "str_message":"Updated succefully"}
 
         
         
-# test sqlalchemy
-@app.get("/sqlalchemy")
-def test_post(db:Session = Depends(get_db)):
-    post = db.query(model.Post).all()
-    return { "Data":"sussces" }
