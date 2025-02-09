@@ -6,28 +6,28 @@ from datetime import datetime
 class PostPayloadBase(BaseModel):
     vchr_title:str
     vchr_content:str
+    bln_published: bool = True
     # 
     # rating:Optional[int] = None
-    int_post_id:Optional[int] = None
+    # int_post_id:Optional[int] = None
 
 class CreatePostPayload(PostPayloadBase):
     # optional field with default value
-    bln_published: bool = True
+    pass
 
 class UpdatePostPayload(PostPayloadBase):
     pass
 
-class CreatePostResponse(PostPayloadBase):
+class PostRes(PostPayloadBase):
     int_post_id:int
-    bln_published:bool
     created_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class GetPostRes(BaseModel):
     str_message: str
-    body: CreatePostResponse
+    body: PostRes
     
     class Config:
-        orm_mode = True
+        from_attributes = True
