@@ -42,7 +42,7 @@ def root():
     return {"body":"Hello 1"}
 
 # request Get method url: "/posts"
-@app.get("/get_posts",status_code=status.HTTP_200_OK, response_model= list[schemas.CreatePostResponse])
+@app.get("/get_posts",status_code=status.HTTP_200_OK, response_model= list[schemas.PostRes])
 def get_posts(db: Session = Depends(get_db)):
     # using postgres
     # cursor.execute("SELECT * FROM tbl_post")
@@ -57,7 +57,7 @@ def get_posts(db: Session = Depends(get_db)):
 
 
 # request POST method url : "/create_post"
-@app.post("/create_post",status_code=status.HTTP_201_CREATED,response_model= schemas.CreatePostResponse)
+@app.post("/create_post",status_code=status.HTTP_201_CREATED,response_model= schemas.GetPostRes)
 def create_post(payload:schemas.CreatePostPayload, db:Session = Depends(get_db)):
     
     '''
@@ -90,7 +90,7 @@ def create_post(payload:schemas.CreatePostPayload, db:Session = Depends(get_db))
     # payload.int_post_id = (max(my_posts,key= lambda x: x['int_post_id'])["int_post_id"] or 0) + 1 
     # to convert pydantic model to dictionary use dict method or model_dump
     # my_posts.append(payload.model_dump())
-    return new_post 
+    return { "str_message":" successfully deleted ","body":new_post }  
 
 # request get method url : "get_post/latest" to get the latest post 
 @app.get("/get_post/latest")
@@ -154,6 +154,13 @@ def delete_post(id:int, db:Session = Depends(get_db)):
     if not deleted_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail= f"Post with id {id} not found")
     
+    deleted_post = {
+        "int_post_id":deleted_post.int_post_id,
+        "vchr_title":deleted_post.vchr_title,
+        "vchr_content":deleted_post.vchr_content,
+        "bln_published":deleted_post.bln_published,
+        "created_at":deleted_post.created_at
+        }
     post_query.delete(synchronize_session=False)
     db.commit()
     
@@ -194,7 +201,7 @@ def update_post(id:int, payload:schemas.UpdatePostPayload, res:Response, db:Sess
     update_query.update(payload.model_dump(),synchronize_session=False)
     
     db.commit()
-    return {"body":update_query.first(), "str_message":"Updated succefully"}
+    return {"str_message":"Updated succefully","body":update_query.first()}
 
         
         
