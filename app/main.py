@@ -5,7 +5,7 @@ from psycopg2.extras import RealDictCursor
 import time
 from . import model
 from .database import engine
-from .routes import posts,users
+from .routes import posts,users,auth
 
 # 
 model.Base.metadata.create_all(bind=engine)
@@ -33,7 +33,7 @@ while True:
 # 
 app.include_router(posts.router)
 app.include_router(users.router)
-
+app.include_router(auth.router)
 
 
 # request Get method url: "/"
