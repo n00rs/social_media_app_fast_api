@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,EmailStr
 from typing import Optional
 from datetime import datetime
 
@@ -28,6 +28,22 @@ class PostRes(PostPayloadBase):
 class GetPostRes(BaseModel):
     str_message: str
     body: PostRes
+    
+    class Config:
+        from_attributes = True
+
+class CreateUserPayload(BaseModel):
+    vchr_email : EmailStr
+    vchr_password : str
+
+class CreateUser(BaseModel):
+    vchr_email:EmailStr
+    int_user_id: int
+    created_at: datetime
+
+class CreateUserRes(BaseModel):
+    str_message: str
+    body: CreateUser
     
     class Config:
         from_attributes = True
