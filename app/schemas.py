@@ -47,3 +47,11 @@ class CreateUserRes(BaseModel):
     
     class Config:
         from_attributes = True
+
+class LoginRes(BaseModel):
+  str_message: str
+  str_access_token: str
+  token_type: str
+  
+class TokenPayload(BaseModel):
+    int_user_id: int
