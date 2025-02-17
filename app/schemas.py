@@ -18,9 +18,17 @@ class CreatePostPayload(PostPayloadBase):
 class UpdatePostPayload(PostPayloadBase):
     pass
 
+class CreateUser(BaseModel):
+    vchr_email:EmailStr
+    int_user_id: int
+    created_at: datetime
+
+
 class PostRes(PostPayloadBase):
     int_post_id:int
     created_at: datetime
+    int_user_id: int
+    user: CreateUser
     
     class Config:
         from_attributes = True
@@ -36,10 +44,7 @@ class CreateUserPayload(BaseModel):
     vchr_email : EmailStr
     vchr_password : str
 
-class CreateUser(BaseModel):
-    vchr_email:EmailStr
-    int_user_id: int
-    created_at: datetime
+
 
 class CreateUserRes(BaseModel):
     str_message: str
