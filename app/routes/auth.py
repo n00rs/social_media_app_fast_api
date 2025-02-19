@@ -11,9 +11,8 @@ router = APIRouter(tags= ["authentication"])
 @router.post("/user_login",status_code=status.HTTP_200_OK,response_model= LoginRes)
 def user_login(payload:OAuth2PasswordRequestForm = Depends(),db:Session= Depends(get_db)):
     try:
-        print(payload)
+        
         user = db.query(User).filter(User.vchr_email == payload.username).first()
-        print(user)
         
         if not user or not verify(str_password= payload.password.strip(), str_hashed_password= user.vchr_password):
             raise HTTPException(detail=f"INVALID_CREDENTIAL_{payload.username}",status_code= status.HTTP_403_FORBIDDEN)

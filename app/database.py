@@ -4,11 +4,12 @@ from sqlalchemy.orm import sessionmaker
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
+from .config import settings
 
 # data base url
 # postgresql://<username>:<password>@<ip@address/host>/<dbname>
 
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:1234@172.19.0.1/fastapi"
+SQLALCHEMY_DATABASE_URL = f"postgresql://{settings.database_username}:{settings.database_password}@{settings.database_host}:{settings.database_port}/{settings.database_name}"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
@@ -32,7 +33,7 @@ async def get_pg_connection():
             # - *password*: password used to authenticate
             # - *host*: database host address (defaults to UNIX socket if not provided)
             # - *port*: connection port number (defaults to 5432 if not provided)
-            conn = psycopg2.connect("dbname=fastapi user=postgres password=1234 host=172.19.0.1",cursor_factory=RealDictCursor)
+            conn = psycopg2.connect(f"dbname={settings.database_name} user={settings.database_username} password={settings.database_password} host={settings.database_host}",cursor_factory=RealDictCursor)
             cursor = conn.cursor() 
             print("Database connection succesfull")
             return cursor

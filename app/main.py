@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from . import model
 from .database import engine,get_pg_connection
 from .routes import posts,users,auth
-
+from .config import settings
 # 
 model.Base.metadata.create_all(bind=engine)
 
@@ -21,8 +21,3 @@ app.include_router(auth.router)
 @app.get("/")
 def root():
     return {"body":"Hello 1"}
-
-from os import getenv
-
-pas = getenv("Path")
-print(pas)
