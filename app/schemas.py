@@ -1,6 +1,8 @@
-from pydantic import BaseModel,EmailStr
+from pydantic import BaseModel,EmailStr,Field
 from typing import Optional
 from datetime import datetime
+from pydantic.types import conint
+from typing_extensions import Annotated
 
 # Define a  model for the create post payload
 class PostPayloadBase(BaseModel):
@@ -60,3 +62,16 @@ class LoginRes(BaseModel):
   
 class TokenPayload(BaseModel):
     int_user_id: int
+    
+'''
+vote payload with the post id 
+and dir ie: 1 or 0 
+1 for like 
+0 for unlike and it should be less than 1
+''' 
+class Vote(BaseModel):
+    int_post_id:int
+    dir: Annotated[int,Field(strict=True,le=1)]
+    
+class VoteRes(BaseModel):
+    str_message:str
