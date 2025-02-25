@@ -34,10 +34,17 @@ class PostRes(PostPayloadBase):
     
     class Config:
         from_attributes = True
+        
+class GetPosts(BaseModel):
+    Post:PostRes
+    int_votes:int
+    
+    class Config:
+        from_attributes = True
 
 class GetPostRes(BaseModel):
     str_message: str
-    body: PostRes
+    body: GetPosts
     
     class Config:
         from_attributes = True

@@ -1,6 +1,7 @@
 
 from fastapi import Response,status,HTTPException,Depends,APIRouter
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 from typing import Optional
 from .. import model,schemas,oauth2
 from ..database import get_db
@@ -14,14 +15,14 @@ if we want to group by some tag add tags
 router = APIRouter(tags= ["post"])
 
 # request Get method url: "/posts"
-@router.get("/get_posts",status_code=status.HTTP_200_OK, response_model= list[schemas.PostRes])
+@router.get("/get_posts",status_code=status.HTTP_200_OK, response_model= list[schemas.GetPosts])
 def get_posts(db: Session = Depends(get_db), 
               current_user = Depends(oauth2.get_current_user),
               limit: int = 10,
               skip: int = 0,
               search: Optional[str] = ""
               ):
-    print(limit,search)
+
     # using postgres
     # cursor.execute("SELECT * FROM tbl_post")
     # my_posts = cursor.fetchall()
@@ -29,10 +30,14 @@ def get_posts(db: Session = Depends(get_db),
     using orm
     sqlalchemy
     '''
-    print(db.query(model.Post).where(model.Post.vchr_content.ilike(f"%{search}%")).limit(limit).offset(skip))
+
     # my_posts = db.query(model.Post).filter(model.Post.int_user_id == current_user.int_user_id).limit(limit).all()
-    my_posts = db.query(model.Post).where(model.Post.vchr_content.ilike(f"%{search.strip()}%")).limit(limit).offset(skip).all()
+    # my_posts = db.query(model.Post).where(model.Post.vchr_content.ilike(f"%{search.strip()}%")).limit(limit).offset(skip).all()
     
+    my_posts = db.query(model.Post,func.count(model.Vote.int_post_id).label("int_votes")).join(
+               model.Vote,model.Vote.int_post_id == model.Post.int_post_id,isouter=True).where(
+               model.Post.vchr_content.ilike(f"%{search.strip()}%")).group_by(
+               model.Post.int_post_id).limit(limit).offset(skip).all()
     
     return  my_posts
 
@@ -101,7 +106,12 @@ def get_post(id: int,res:Response,db: Session = Depends(get_db), current_user = 
     using orm
     sqlalchemy
     '''
-    dict_post = db.query(model.Post).filter(model.Post.int_post_id == id , model.Post.int_user_id == current_user.int_user_id).first()
+    # dict_post = db.query(model.Post).filter(model.Post.int_post_id == id , model.Post.int_user_id == current_user.int_user_id).first()
+    
+    dict_post = db.query(model.Post,func.count(model.Vote.int_post_id).label("int_votes")).join(
+               model.Vote,model.Vote.int_post_id == model.Post.int_post_id,isouter=True).filter(
+               model.Post.int_post_id == id , model.Post.int_user_id == current_user.int_user_id).group_by(
+               model.Post.int_post_id).first()
     
     if not dict_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail= f"Post with id {id} not found")
