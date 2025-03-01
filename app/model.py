@@ -21,6 +21,7 @@ class User(Base):
     vchr_email = Column(VARCHAR,nullable= False,unique= True)
     vchr_password = Column(VARCHAR, nullable= False)
     created_at = Column(TIMESTAMP(timezone=True), nullable= False,server_default= text("now()"))
+    vchr_phn_number = Column(VARCHAR)
 
 '''
 create an table for saving votes 
