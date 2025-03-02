@@ -79,7 +79,7 @@ def create_post(payload:schemas.CreatePostPayload,
     # payload.int_post_id = (max(my_posts,key= lambda x: x['int_post_id'])["int_post_id"] or 0) + 1 
     # to convert pydantic model to dictionary use dict method or model_dump
     # my_posts.append(payload.model_dump())
-    return { "str_message":" successfully Created","body":new_post }  
+    return { "str_message":" successfully Created","body":{"Post":new_post,"int_votes":0} }  
 
 # request get method url : "get_post/latest" to get the latest post 
 @router.get("/get_post/latest")
